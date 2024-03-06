@@ -1,0 +1,36 @@
+{
+  "name": "mesto-api",
+  "version": "1.0.0",
+  "description": "Проект бэкенда для соцсети mesto ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx eslint src/**/*.ts",
+    "build": "tsc",
+    "dev": "ts-node-dev src/app.ts",
+    "start": "ts-node src/app.ts"
+  },
+  "keywords": [
+    "mesto",
+    "api"
+  ],
+  "author": "Aleksei Gamov",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.25",
+    "@typescript-eslint/eslint-plugin": "^7.1.1",
+    "@typescript-eslint/parser": "^7.1.1",
+    "eslint": "^8.57.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-react": "^7.34.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "express": "^4.18.3",
+    "mongoose": "^8.2.1"
+  }
+}
