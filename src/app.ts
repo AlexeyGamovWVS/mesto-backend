@@ -3,14 +3,10 @@ import mongoose from "mongoose";
 import userRouter from "./routers/user";
 import cardsRouter from "./routers/card";
 import { auth } from "./middlewars/auth";
-
-const DEFAULTS = {
-  PORT: 3000,
-};
-const { PORT = DEFAULTS.PORT } = process.env;
+import { MONGODB_URI, PORT } from "./app-config";
 
 const app = express();
-mongoose.connect("mongodb://localhost:27017/mestodb");
+mongoose.connect(MONGODB_URI);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
