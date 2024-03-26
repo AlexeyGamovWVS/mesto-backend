@@ -1,4 +1,5 @@
 import { Request, Response } from "express";
+import bcrypt from "bcryptjs";
 import { SERVER_STATUSES, sendError } from "../utils/errors";
 import userSchema from "../models/user";
 import { RequestWithUserID } from "../middlewars/auth";
@@ -18,9 +19,12 @@ export const getUser = (req: Request, res: Response) => {
 };
 
 export const createUser = (req: Request, res: Response) => {
-  const { name, about, avatar } = req.body;
-  return userSchema
-    .create({ name, about, avatar })
+  const { name, about, avatar, email, password } = req.body;
+  bcrypt
+    .hash(password, 10)
+    .then((hash) =>
+      userSchema.create({ name, about, avatar, password: hash, email }),
+    )
     .then((user) => res.status(SERVER_STATUSES.POST_SUCCESS).send(user))
     .catch((err) => sendError(res, err.name));
 };
