@@ -29,6 +29,10 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     required: true,
     default: PROFILE_DEFAULTS.avatar,
+    validate: {
+      validator: (url: string) => validator.isURL(url),
+      message: "Некорректная ссылка на изображение",
+    },
   },
   email: {
     type: String,

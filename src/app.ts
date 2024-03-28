@@ -1,5 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
+import { errors } from "celebrate";
 import cookieParser from "cookie-parser";
 import { requestLogger, errorLogger } from "./middlewars/logger";
 import { MONGODB_URI, PORT } from "./app-config";
@@ -14,6 +15,9 @@ app.use(cookieParser());
 app.use(requestLogger);
 app.use("/", appRouter);
 
+// обработчики ошибок
+app.use(errors()); // обработчик ошибок celebrate
+// наш централизованный обработчик и логгер
 app.use(errorLogger);
 app.use(getError);
 
