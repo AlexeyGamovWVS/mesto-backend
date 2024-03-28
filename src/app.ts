@@ -1,18 +1,17 @@
 import express from "express";
 import mongoose from "mongoose";
-import userRouter from "./routers/user";
-import cardsRouter from "./routers/card";
-import { auth } from "./middlewars/auth";
+import cookieParser from "cookie-parser";
+
 import { MONGODB_URI, PORT } from "./app-config";
+import appRouter from "./routers/app-router";
 
 const app = express();
 mongoose.connect(MONGODB_URI);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-app.use(auth);
-app.use("/users", userRouter);
-app.use("/cards", cardsRouter);
+app.use("/", appRouter);
 
 app.listen(PORT, () => {
   // Если всё работает, консоль покажет, какой порт приложение слушает

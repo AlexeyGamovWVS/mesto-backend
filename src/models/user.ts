@@ -1,6 +1,7 @@
-import { PROFILE_DEFAULTS } from "../app-config";
 import mongoose from "mongoose";
 import validator from "validator";
+import { PROFILE_DEFAULTS } from "../app-config";
+
 export interface IUser {
   name: string;
   about: string;
