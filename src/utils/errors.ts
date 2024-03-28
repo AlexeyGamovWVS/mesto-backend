@@ -3,6 +3,7 @@ import { Response } from "express";
 export const SERVER_STATUSES = {
   SERVER_ERROR: 500,
   NOT_FOUND: 404,
+  NOT_AUTHORIZED: 401,
   BAD_REQUEST: 400,
   POST_SUCCESS: 201,
   SUCCESS: 200,

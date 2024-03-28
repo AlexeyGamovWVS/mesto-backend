@@ -20,12 +20,22 @@ export const createCard = (req: RequestWithUserID, res: Response) => {
     .catch((err) => sendError(res, err.name));
 };
 
-export const deleteCard = (req: Request, res: Response) => {
+export const deleteCard = (req: RequestWithUserID, res: Response) => {
   const { cardId } = req.params;
   return cardSchema
-    .findByIdAndDelete({ _id: cardId })
+    .findById({ _id: cardId })
     .then((card) => {
-      res.status(SERVER_STATUSES.SUCCESS).send(card);
+      if (card?.owner.toString() !== req.user?._id) {
+        return Promise.reject(
+          new Error("Карточка принадлежит другому пользователю"),
+        );
+      }
+      return cardSchema
+        .findByIdAndDelete({ _id: cardId })
+        .then((deletedCard) => {
+          res.status(SERVER_STATUSES.SUCCESS).send(deletedCard);
+        })
+        .catch((err) => sendError(res, err.name));
     })
     .catch((err) => sendError(res, err.name));
 };
