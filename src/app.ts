@@ -1,7 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
-
+import { requestLogger, errorLogger } from "./middlewars/logger";
 import { MONGODB_URI, PORT } from "./app-config";
 import appRouter from "./routers/app-router";
 import getError from "./middlewars/error";
@@ -11,8 +11,10 @@ mongoose.connect(MONGODB_URI);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use(requestLogger);
 app.use("/", appRouter);
+
+app.use(errorLogger);
 app.use(getError);
 
 app.listen(PORT, () => {
