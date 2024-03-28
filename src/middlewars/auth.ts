@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import { verify } from "jsonwebtoken";
 import { JWT_SECRET } from "../app-config";
-import { SERVER_STATUSES } from "../utils/errors";
+import NotAuthorizedError from "../utils/not-authorized-error";
+import ERR_MSG from "../utils/error-messages";
 
 export interface RequestWithUserID extends Request {
   user?: {
@@ -16,18 +17,14 @@ export const auth = (
 ) => {
   const jwtToken = req.cookies.jwt;
   if (!jwtToken) {
-    return res
-      .status(SERVER_STATUSES.NOT_AUTHORIZED)
-      .send({ message: "Пожалуйста авторизуйтесь" });
+    return next(new NotAuthorizedError(ERR_MSG.NOT_AUTH));
   }
   let payload: any;
   try {
     payload = verify(jwtToken, JWT_SECRET);
     req.user = payload;
-  } catch (error) {
-    return res.status(SERVER_STATUSES.NOT_AUTHORIZED).send({
-      message: "Пожалуйста авторизуйтесь",
-    });
+  } catch (err) {
+    return next(new NotAuthorizedError(ERR_MSG.BAD_AUTH));
   }
   return next();
 };
