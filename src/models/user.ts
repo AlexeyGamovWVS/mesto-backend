@@ -15,19 +15,16 @@ const userSchema = new mongoose.Schema<IUser>({
     type: String,
     minlength: 2,
     maxlength: 30,
-    required: true,
     default: PROFILE_DEFAULTS.name,
   },
   about: {
     type: String,
     minlength: 2,
     maxlength: 200,
-    required: true,
     default: PROFILE_DEFAULTS.about,
   },
   avatar: {
     type: String,
-    required: true,
     default: PROFILE_DEFAULTS.avatar,
     validate: {
       validator: (url: string) => validator.isURL(url),

@@ -42,6 +42,7 @@ export const deleteCard = (
   const { cardId } = req.params;
   return cardSchema
     .findById({ _id: cardId })
+    .orFail()
     .then((card) =>
       card?.owner.toString() !== req.user?._id
         ? next(new NotAllowedError(ERR_MSG.NOT_ALLOWED_DEL_CARD))
@@ -53,10 +54,12 @@ export const deleteCard = (
             .catch((err) => next(err)),
     )
     .catch((err) =>
-      err instanceof mongoose.Error.DocumentNotFoundError ||
-      mongoose.Error.CastError
+      // eslint-disable-next-line no-nested-ternary
+      err instanceof mongoose.Error.DocumentNotFoundError
         ? next(new NotFoundError(ERR_MSG.NOT_FOUND))
-        : next(err),
+        : err instanceof mongoose.Error.CastError
+          ? next(new BadRequestError(ERR_MSG.BAD_REQ))
+          : next(err),
     );
 };
 
@@ -74,13 +77,16 @@ export const toggleLike = (
         : { $pull: { likes: req.user?._id } },
       { new: true },
     )
+    .orFail()
     .then((card) => {
       res.status(SERVER_STATUSES.POST_SUCCESS).send(card);
     })
     .catch((err) =>
-      err instanceof mongoose.Error.DocumentNotFoundError ||
-      mongoose.Error.CastError
+      // eslint-disable-next-line no-nested-ternary
+      err instanceof mongoose.Error.DocumentNotFoundError
         ? next(new NotFoundError(ERR_MSG.NOT_FOUND))
-        : next(err),
+        : err instanceof mongoose.Error.CastError
+          ? next(new BadRequestError(ERR_MSG.BAD_REQ))
+          : next(err),
     );
 };

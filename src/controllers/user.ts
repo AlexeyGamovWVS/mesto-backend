@@ -21,12 +21,15 @@ export const getUsers = (req: Request, res: Response, next: NextFunction) =>
 export const getUser = (req: Request, res: Response, next: NextFunction) =>
   userSchema
     .findById({ _id: req.params.userId })
+    .orFail() // пробросит ошибку DocumentNotFoundError
     .then((user) => res.status(SERVER_STATUSES.SUCCESS).send(user))
     .catch((err) =>
-      err instanceof mongoose.Error.DocumentNotFoundError ||
-      mongoose.Error.CastError
+      // eslint-disable-next-line no-nested-ternary
+      err instanceof mongoose.Error.DocumentNotFoundError
         ? next(new NotFoundError(ERR_MSG.NOT_FOUND))
-        : next(err),
+        : err instanceof mongoose.Error.CastError
+          ? next(new BadRequestError(ERR_MSG.BAD_REQ))
+          : next(err),
     );
 
 export const getMe = (
@@ -46,7 +49,15 @@ export const createUser = (req: Request, res: Response, next: NextFunction) => {
     .then((hash) =>
       userSchema.create({ name, about, avatar, password: hash, email }),
     )
-    .then((user) => res.status(SERVER_STATUSES.POST_SUCCESS).send(user))
+    .then((user) =>
+      res.status(SERVER_STATUSES.POST_SUCCESS).send({
+        name: user.name,
+        about: user.about,
+        avatar: user.avatar,
+        email: user.email,
+        _id: user._id,
+      }),
+    )
     .catch((err) =>
       // eslint-disable-next-line no-nested-ternary
       err instanceof mongoose.Error.ValidationError
@@ -65,6 +76,7 @@ export const updateUser = (
   const { name, about } = req.body;
   return userSchema
     .findByIdAndUpdate({ _id: req.user?._id }, { name, about }, { new: true })
+    .orFail()
     .then((user) => res.status(SERVER_STATUSES.POST_SUCCESS).send(user))
     .catch((err) =>
       // eslint-disable-next-line no-nested-ternary
@@ -84,6 +96,7 @@ export const updateUserAvatar = (
   const { avatar } = req.body;
   return userSchema
     .findByIdAndUpdate({ _id: req.user?._id }, { avatar }, { new: true })
+    .orFail()
     .then((user) => res.status(SERVER_STATUSES.POST_SUCCESS).send(user))
     .catch((err) =>
       // eslint-disable-next-line no-nested-ternary

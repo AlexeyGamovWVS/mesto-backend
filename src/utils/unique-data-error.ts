@@ -5,6 +5,6 @@ export default class UniqueDataError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.statusCode = SERVER_STATUSES.NOT_FOUND;
+    this.statusCode = SERVER_STATUSES.DATA_EXIST;
   }
 }
