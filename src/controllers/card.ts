@@ -1,59 +1,92 @@
-import { Request, Response } from "express";
+import mongoose from "mongoose";
+import { NextFunction, Request, Response } from "express";
 import { RequestWithUserID } from "../middlewars/auth";
-import { SERVER_STATUSES, sendError } from "../utils/errors";
 import cardSchema from "../models/card";
+import SERVER_STATUSES from "../utils/server-statuses";
+import BadRequestError from "../utils/bad-request-error";
+import ERR_MSG from "../utils/error-messages";
+import NotAllowedError from "../utils/not-allowed-error";
+import NotFoundError from "../utils/not-found-error";
 
-export const getCards = (req: Request, res: Response) => {
+export const getCards = (req: Request, res: Response, next: NextFunction) => {
   cardSchema
     .find({})
+    .populate(["owner", "likes"])
     .then((cards) => {
       res.status(SERVER_STATUSES.SUCCESS).send(cards);
     })
-    .catch((err) => sendError(res, err.name));
+    .catch(next);
 };
 
-export const createCard = (req: RequestWithUserID, res: Response) => {
+export const createCard = (
+  req: RequestWithUserID,
+  res: Response,
+  next: NextFunction,
+) => {
   const { name, link } = req.body;
   return cardSchema
     .create({ name, link, owner: req.user?._id })
     .then((card) => res.status(SERVER_STATUSES.POST_SUCCESS).send(card))
-    .catch((err) => sendError(res, err.name));
+    .catch((err) =>
+      err instanceof mongoose.Error.ValidationError
+        ? next(new BadRequestError(ERR_MSG.BAD_REQ))
+        : next(err),
+    );
 };
 
-export const deleteCard = (req: Request, res: Response) => {
+export const deleteCard = (
+  req: RequestWithUserID,
+  res: Response,
+  next: NextFunction,
+) => {
   const { cardId } = req.params;
   return cardSchema
-    .findByIdAndDelete({ _id: cardId })
-    .then((card) => {
-      res.status(SERVER_STATUSES.SUCCESS).send(card);
-    })
-    .catch((err) => sendError(res, err.name));
+    .findById({ _id: cardId })
+    .orFail()
+    .then((card) =>
+      card?.owner.toString() !== req.user?._id
+        ? next(new NotAllowedError(ERR_MSG.NOT_ALLOWED_DEL_CARD))
+        : cardSchema
+            .findByIdAndDelete({ _id: cardId })
+            .then((deletedCard) => {
+              res.status(SERVER_STATUSES.SUCCESS).send(deletedCard);
+            })
+            .catch((err) => next(err)),
+    )
+    .catch((err) =>
+      // eslint-disable-next-line no-nested-ternary
+      err instanceof mongoose.Error.DocumentNotFoundError
+        ? next(new NotFoundError(ERR_MSG.NOT_FOUND))
+        : err instanceof mongoose.Error.CastError
+          ? next(new BadRequestError(ERR_MSG.BAD_REQ))
+          : next(err),
+    );
 };
 
-export const putLike = (req: RequestWithUserID, res: Response) => {
+export const toggleLike = (
+  req: RequestWithUserID,
+  res: Response,
+  next: NextFunction,
+) => {
   const { cardId } = req.params;
   return cardSchema
     .findByIdAndUpdate(
       { _id: cardId },
-      { $addToSet: { likes: req.user?._id } }, // добавить _id в массив, если его там нет
+      req.method === "PUT"
+        ? { $addToSet: { likes: req.user?._id } }
+        : { $pull: { likes: req.user?._id } },
       { new: true },
     )
+    .orFail()
     .then((card) => {
       res.status(SERVER_STATUSES.POST_SUCCESS).send(card);
     })
-    .catch((err) => sendError(res, err.name));
-};
-
-export const deleteLike = (req: RequestWithUserID, res: Response) => {
-  const { cardId } = req.params;
-  return cardSchema
-    .findByIdAndUpdate(
-      { _id: cardId },
-      { $pull: { likes: req.user?._id } }, // убрать _id из массива
-      { new: true },
-    )
-    .then((card) => {
-      res.status(SERVER_STATUSES.POST_SUCCESS).send(card);
-    })
-    .catch((err) => sendError(res, err.name));
+    .catch((err) =>
+      // eslint-disable-next-line no-nested-ternary
+      err instanceof mongoose.Error.DocumentNotFoundError
+        ? next(new NotFoundError(ERR_MSG.NOT_FOUND))
+        : err instanceof mongoose.Error.CastError
+          ? next(new BadRequestError(ERR_MSG.BAD_REQ))
+          : next(err),
+    );
 };
